@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>数字人口播 · 自动剪辑工作流</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="studio-v2">
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+  <main class="shell">
+    <div class="topbar">
+      <a class="brand" href="#" aria-label="开口片场首页">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span><b>开口片场</b><small>PORTRAIT STUDIO</small></span>
+      </a>
+      <nav class="tabs">
+        <button class="tab on" data-view="studio" type="button">创作台</button>
+        <button class="tab" data-view="history" type="button">生成历史 <b id="historyCount">0</b></button>
+      </nav>
+      <div class="health-pill"><span id="healthDot"></span><span id="health">正在检查本地环境……</span></div>
+    </div>
+
+    <header class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow"><i></i> LOCAL · OPEN SOURCE</span>
+        <h1>让一张照片<br><em>开口讲好内容</em></h1>
+        <p>输入照片与文案，本地自动完成配音、自然口型、素材混剪、贴纸、音乐和缩放大字，直接生成 9:16 竖屏成片。</p>
+      </div>
+      <div class="hero-notes">
+        <div><b>01</b><span>照片与文案<br>只在本机处理</span></div>
+        <div><b>02</b><span>多镜头节奏<br>自动完成剪辑</span></div>
+        <div><b>03</b><span>1080 × 1920<br>适配短视频发布</span></div>
+      </div>
+    </header>
+
+    <section id="view-studio">
+      <div class="workspace">
+        <form id="form" class="panel builder">
+          <div class="field step-card">
+            <label>01 / 选择人像</label>
+            <div class="source-switch">
+              <button class="src" data-src="upload" type="button">上传照片</button>
+              <button class="src on" data-src="avatar" type="button">虚拟人像</button>
+            </div>
+
+            <label class="drop" id="drop" for="image">
+              <input id="image" type="file" accept="image/jpeg,image/png,image/webp">
+              <img id="preview" alt="照片预览">
+              <span id="dropText"><b>选择照片</b><small>JPG / PNG / WebP，建议脸部清晰、无遮挡</small></span>
+            </label>
+
+            <div id="avatarPane" class="avatar-pane hidden">
+              <div class="avatar-grid" id="avatarGrid"></div>
+              <p class="hint" id="avatarHint">正在读取 assets/avatars……</p>
+            </div>
+          </div>
+
+          <div class="field step-card">
+            <label for="text">02 / 输入口播文案</label>
+
+            <details id="presetBox" class="preset-box">
+              <summary>示例文案库 <b id="presetTotal">0</b> 条 · 点击行业看示例</summary>
+              <div class="industry-tabs" id="industryTabs"></div>
+              <div class="preset-list" id="presetList">
+                <p class="hint">选择一个行业，查看该行业的示例文案。</p>
+              </div>
+            </details>
+
+            <textarea id="text" maxlength="3600" placeholder="例如：只需要一张照片，就能生成属于你的数字人口播视频。工作中我最烦的就是重复操作，所以我把它自动化了。"></textarea>
+            <div id="fishTags" class="fish-tags hidden" aria-label="Fish Speech 表现标签">
+              <span>表现标签</span>
+              <button type="button" data-fish-tag="[停顿]">停顿</button>
+              <button type="button" data-fish-tag="[长停顿]">长停顿</button>
+              <button type="button" data-fish-tag="[强调]">强调</button>
+              <button type="button" data-fish-tag="[语气加重]">语气加重</button>
+              <button type="button" data-fish-tag="[轻声]">轻声</button>
+              <button type="button" data-fish-tag="[开心]">开心</button>
+            </div>
+            <div class="counter"><span id="count">0</span> / 3600</div>
+          </div>
+
+          <div class="field step-card media-step">
+            <label>03 / 选择混剪素材</label>
+            <div class="mix-switch" id="mixSwitch" role="group" aria-label="成片模式">
+              <button type="button" data-mix-mode="portrait">人像口播<small>全程显示数字人</small></button>
+              <button type="button" data-mix-mode="mixed" class="on">智能混剪<small>人像、素材和音乐</small></button>
+            </div>
+            <div class="media-toolbar">
+              <p id="mediaHint">正在读取本地素材库……</p>
+              <button id="mediaAutoPick" type="button">帮我搭配</button>
+            </div>
+            <div id="mediaLibrary" class="media-library">
+              <section>
+                <div class="media-title"><b>画面素材</b><span id="stockCount">0 个已选</span></div>
+                <div id="stockGrid" class="asset-grid"><p class="hint">素材载入中……</p></div>
+              </section>
+              <section>
+                <div class="media-title"><b>动态贴纸</b><span id="stickerCount">0 个已选</span></div>
+                <div id="stickerGrid" class="sticker-grid"><p class="hint">贴纸载入中……</p></div>
+              </section>
+            </div>
+          </div>
+
+          <details open class="settings step-card">
+            <summary>配音与成片设置</summary>
+            <div class="options">
+              <label class="wide">配音引擎
+                <select id="ttsEngine"></select>
+              </label>
+              <label class="wide">口型引擎
+                <select id="avatarEngine"></select>
+              </label>
+              <label class="wide">后期引擎
+                <select id="postEngine"></select>
+              </label>
+              <label class="wide">GPU 加速
+                <select id="acceleration">
+                  <option value="auto">正在检测显卡……</option>
+                </select>
+                <small class="tone" id="gpuHint">自动识别 NVIDIA、AMD 与 Intel GPU</small>
+              </label>
+              <label class="wide" id="voiceField">配音音色
+                <select id="voice"></select>
+                <select id="fishVoice" class="hidden"></select>
+                <small class="tone" id="voiceTone">—</small>
+              </label>
+              <label>镜头数量
+                <select id="segments">
+                  <option value="1">1 个镜头（不剪辑）</option>
+                  <option value="2">2 个镜头</option>
+                  <option value="3" selected>3 个镜头（推荐）</option>
+                  <option value="4">4 个镜头</option>
+                  <option value="5">5 个镜头</option>
+                  <option value="6">6 个镜头</option>
+                </select>
+              </label>
+              <label>转场风格
+                <select id="transitionStyle">
+                  <option value="fade" selected>叠化</option>
+                  <option value="dissolve">柔化溶解</option>
+                  <option value="slideleft">左滑</option>
+                  <option value="slideup">上滑</option>
+                  <option value="circleopen">圆形展开</option>
+                  <option value="smoothleft">平滑左移</option>
+                </select>
+              </label>
+              <label>画面取景
+                <select id="portraitMode">
+                  <option value="close">头像特写（推荐）</option>
+                  <option value="full">保留整张照片</option>
+                </select>
+              </label>
+              <label>口型表现
+                <select id="mouthStyle">
+                  <option value="natural" selected>自然（推荐）</option>
+                  <option value="clear">清晰</option>
+                  <option value="expressive">活泼</option>
+                </select>
+                <small class="tone" id="mouthHint">减少夸张张嘴，保持自然头部动作</small>
+              </label>
+              <label>语速
+                <select id="speed">
+                  <option value="0.9">舒缓</option>
+                  <option value="1" selected>自然</option>
+                  <option value="1.12">偏快</option>
+                  <option value="1.25">快节奏</option>
+                </select>
+              </label>
+              <label class="check"><input id="captions" type="checkbox" checked> 自动添加缩放大字</label>
+              <label class="check"><input id="faceEnhance" type="checkbox"> 人脸高清修复（更慢）</label>
+              <label class="check"><input id="introCard" type="checkbox" checked> 多镜头时插入封面卡</label>
+              <label class="wide" id="titleField">封面标题
+                <input id="cardTitle" type="text" maxlength="24" placeholder="默认取文案前 16 字">
+              </label>
+              <label class="check"><input id="useBgm" type="checkbox"> 添加背景音乐</label>
+            </div>
+
+            <section id="fishStudio" class="fish-studio hidden" aria-label="Fish Speech 音色工作台">
+              <header class="fish-studio-head">
+                <div><span class="fish-wave">●●●</span><b>Fish Speech 音色工作台</b></div>
+                <span id="fishRuntime" class="fish-runtime">正在检查本地服务</span>
+              </header>
+              <div class="fish-studio-body">
+                <div>
+                  <p class="fish-kicker">选择音色</p>
+                  <div id="fishVoiceList" class="fish-voice-list"></div>
+                </div>
+                <div class="fish-preview-box">
+                  <div class="fish-preview-top"><b>汉语</b><span>使用上方口播文案试听</span></div>
+                  <p>参考 Fish Audio 的操作方式：选择音色、在文案中插入表现标签，然后先试听配音。</p>
+                  <div class="fish-preview-actions">
+                    <button id="fishPreview" class="fish-preview-btn" type="button">生成并试听</button>
+                    <span id="fishPreviewHint">最长取前 500 字</span>
+                  </div>
+                  <audio id="fishPreviewAudio" class="hidden" controls preload="none"></audio>
+                </div>
+              </div>
+              <details class="fish-add">
+                <summary>＋ 添加我的音色</summary>
+                <div class="fish-add-grid">
+                  <label>音色名称<input id="fishVoiceName" type="text" maxlength="30" placeholder="例如：我的自然口播"></label>
+                  <label>参考录音<input id="fishVoiceAudio" type="file" accept="audio/wav,audio/mpeg,audio/flac,audio/ogg,audio/mp4,audio/aac"></label>
+                  <label class="wide">录音对应文字<textarea id="fishVoiceTranscript" maxlength="500" placeholder="逐字填写录音内容。推荐 5–10 秒、环境安静、只含一人声音。"></textarea></label>
+                  <button id="fishVoiceSave" type="button">保存音色</button>
+                  <span id="fishVoiceSaveHint"></span>
+                </div>
+              </details>
+            </section>
+          </details>
+
+          <div class="field bgm-field hidden" id="bgmField">
+            <label for="bgm">背景音乐（可选）</label>
+            <label class="pick" for="bgm">
+              <input id="bgm" type="file" accept="audio/*">
+              <b id="bgmName">选择本地音乐</b>
+              <small id="bgmHint">也可以把音乐放进 assets/bgm 后刷新页面</small>
+            </label>
+            <div class="list" id="bgmList"></div>
+            <label class="volume">音量 <input id="bgmVolume" type="range" min="0" max="50" value="16"><span id="bgmVolumeText">16%</span></label>
+          </div>
+
+          <button id="submit" type="submit">生成数字人口播 <span>→</span></button>
+          <p class="consent">仅上传本人或已获授权的人像；音乐请使用可商用素材；生成内容请按发布平台规则标注。</p>
+        </form>
+
+        <aside class="result panel stage">
+          <div class="stage-head"><div><span>LIVE PREVIEW</span><b>竖屏成片</b></div><span class="ratio">9 : 16</span></div>
+          <div class="stage-body">
+          <div id="idle" class="idle">
+            <div class="orb"></div>
+            <h2>等待创作</h2>
+            <p>多镜头生成会依次合成每个镜头的配音与口型，CPU 上耗时较长。页面可以保持打开，进度会自动更新。</p>
+          </div>
+          <div id="running" class="running hidden">
+            <div class="status-row"><span id="statusText">准备中</span><b id="percent">0%</b></div>
+            <div class="bar"><i id="bar"></i></div>
+            <p id="message">正在初始化……</p>
+            <div class="steps">
+              <span>配音</span><span>口型</span><span>字幕</span><span>剪辑</span><span>混音</span>
+            </div>
+          </div>
+          <div id="done" class="done hidden">
+            <video id="video" controls playsinline></video>
+            <div class="done-meta" id="doneMeta"></div>
+            <div class="done-timing" id="doneTiming"></div>
+            <div class="timeline-box">
+              <div class="timeline-head"><b>镜头时间一览</b><span id="timelineTotal"></span></div>
+              <div id="timeline"></div>
+            </div>
+            <div class="done-actions">
+              <a id="download" class="download" download="数字人口播.mp4">下载 MP4</a>
+              <button id="again" class="ghost" type="button">再做一条</button>
+            </div>
+          </div>
+          <div id="error" class="error hidden"><b>生成失败</b><pre id="errorText"></pre><button id="retry" class="ghost" type="button">返回修改</button></div>
+          </div>
+          <div class="stage-foot"><span>1080P</span><span>25 FPS</span><span>H.264</span><span>LOCAL</span></div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="view-history" class="hidden">
+      <div class="history-bar">
+        <p id="historySummary">正在读取生成历史……</p>
+        <button id="clearHistory" class="ghost inline" type="button">清空历史</button>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </section>
+
+    <footer class="site-foot"><span>OPEN SOURCE PORTRAIT WORKFLOW</span><span>照片 · 配音 · 口型 · 剪辑</span></footer>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>
